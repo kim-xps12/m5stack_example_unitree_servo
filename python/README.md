@@ -20,7 +20,7 @@ pip install -r requirements.txt
 position in mode 1, with speed feed-forward and a smooth amplitude ramp.
 
 ```bash
-python sin_swing_demo.py --amp 0.5 --freq 0.5 --kp 10 --kd 0.3 --duration 10
+python sin_swing_demo.py --id 0 --amp 0.5 --freq 0.5 --kp 10 --kd 0.3 --duration 10
 ```
 
 | Option | Default | Description |
