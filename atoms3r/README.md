@@ -2,7 +2,8 @@
 
 Firmware for driving the J288/S288 servo from an M5Stack AtomS3R through the
 [Unitree servo board](https://github.com/kim-xps12/m5stack_board_unitree_brushless_digital_servo):
-a sine swing demo (`sin_swing`) and a bench firmware with analysis scripts (`bench`). In the bench,
+a sine swing demo (`sin_swing`) and a bench firmware with analysis scripts (`bench`). A separate
+firmware (`xbox`) prints the state of an Xbox controller connected over Bluetooth LE. In the bench,
 the AtomS3R doubles as the measuring instrument: its RMT peripheral generates test patterns and
 records pin waveforms with 12.5 ns resolution, so no oscilloscope is needed.
 
@@ -96,6 +97,38 @@ status        # one mode=0 exchange, the servo does not move
 On the Unitree board, both an S288 and a J288 swung at exactly 4 Mbps with no missed reply in
 14,000 cycles each (10 s + 60 s at 200 Hz). A missed command is not fatal: the servo keeps the
 previous target until the next one.
+
+## Xbox Controller
+
+`src/xbox/` connects an Xbox Wireless Controller (Model 1914, the Xbox Series X|S controller)
+over Bluetooth LE and prints every button, stick and trigger on the USB serial port (115200 bps).
+The ESP32-S3 has no Bluetooth Classic, so the controller must speak BLE; Model 1914 does.
+The connection and the report parsing come from
+[XboxSeriesXControllerESP32_asukiaaa](https://github.com/asukiaaa/arduino-XboxSeriesXControllerESP32)
+(on NimBLE-Arduino); `platformio.ini` pins it and its dependencies. No wiring is needed.
+
+```bash
+pio run -e xbox -t upload
+pio device monitor
+```
+
+Hold the pair button on the top of the controller until the Xbox button blinks fast. The firmware
+connects to the first Xbox controller it finds and prints one line whenever the state changes
+(at most every 50 ms):
+
+```
+LX=32768 LY=32768 RX=32768 RY=32768 LT=   0 RT=   0 | A=0 B=0 X=0 Y=0 LB=0 RB=0 LS=0 RS=0 View=0 Menu=0 Xbox=0 Share=0 | Up=0 Down=0 Left=0 Right=0 | bat=0%
+```
+
+| Field | Range |
+|-------|-------|
+| `LX` `LY` `RX` `RY` (sticks) | 0–65535, about 32768 at rest |
+| `LT` `RT` (triggers) | 0–1023 |
+| Buttons, `LS` `RS` (stick clicks), D-pad | 1 while pressed |
+| `bat` | Battery level in percent |
+
+While no controller is connected, `xbox: scanning` is printed every 3 s. After three failed
+connection attempts in a row the AtomS3R restarts and scans again.
 
 ## DYNAMIXEL TTL Board
 

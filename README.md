@@ -9,7 +9,7 @@ Firmware, scripts and test records for bringing up the [Unitree servo board for 
 
 | フォルダ / Folder | 中身 / Contents |
 | --- | --- |
-| `atoms3r/` | AtomS3R のファームウェア (`bench`：計測用，`sin_swing`：首振りデモ)，計測スクリプト，実験，設計メモ (`docs/`)，ログ (`logs/`)．AtomS3R firmware, bench scripts, experiments, design notes and logs |
+| `atoms3r/` | AtomS3R のファームウェア (`bench`：計測用，`sin_swing`：首振りデモ，`xbox`：Xbox コントローラの状態表示)，計測スクリプト，実験，設計メモ (`docs/`)，ログ (`logs/`)．AtomS3R firmware (bench, sine swing demo, Xbox controller monitor), bench scripts, experiments, design notes and logs |
 | `python/` | Unitree の USB アダプタを使って PC から動かすスクリプトと，パケット処理 (`servo_protocol.py`)．Host scripts through Unitree's USB adapter, and the packet module |
 | `external/digital_servo/` | Unitree の公式リポジトリ (git submodule，変更しない)．Unitree's repository as a git submodule, kept unmodified |
 
