@@ -26,6 +26,46 @@ static const uint8_t MAX_FAILED_CONNECTIONS = 3;
 
 static XboxSeriesXControllerESP32_asukiaaa::Core xbox;  // 引数に MAC アドレスを渡すとその 1 台だけにつなぐ
 
+#ifdef XBOX_RAW_DUMP
+// 調べもの用: -DXBOX_RAW_DUMP でビルドすると, HID の通知を解析せずに 16 進で表示する.
+// 通知の受け口をこちらの関数に付け替えるので, この間はライブラリの解析結果は更新されない.
+struct RawReport {
+  uint16_t handle;
+  uint8_t len;
+  uint8_t data[32];
+};
+static QueueHandle_t raw_reports;
+
+static void on_raw_report(NimBLERemoteCharacteristic *chara, uint8_t *data, size_t len, bool) {
+  RawReport r;
+  r.handle = chara->getHandle();
+  r.len = len < sizeof(r.data) ? len : sizeof(r.data);
+  memcpy(r.data, data, r.len);
+  xQueueSend(raw_reports, &r, 0);
+}
+
+static void subscribe_raw() {
+  NimBLEClient *client = XboxSeriesXControllerESP32_asukiaaa::pConnectedClient;
+  NimBLERemoteService *hid = client ? client->getService(XboxSeriesXControllerESP32_asukiaaa::uuidServiceHid)
+                                    : nullptr;
+  if (hid == nullptr) return;
+  for (NimBLERemoteCharacteristic *chara : hid->getCharacteristics(false)) {
+    if (chara->canNotify() && chara->subscribe(true, on_raw_report, true)) {
+      Serial.printf("raw: subscribed handle %u\n", chara->getHandle());
+    }
+  }
+}
+
+static void print_raw_reports() {
+  RawReport r;
+  while (xQueueReceive(raw_reports, &r, 0) == pdTRUE) {
+    Serial.printf("raw h=%u len=%u:", r.handle, r.len);
+    for (uint8_t i = 0; i < r.len; i++) Serial.printf(" %02x", r.data[i]);
+    Serial.println();
+  }
+}
+#endif
+
 // 表示する状態. 前回と比べて変化を見るため, 解析結果をここへ写す.
 struct State {
   uint16_t lx, ly, rx, ry, lt, rt;
@@ -82,6 +122,9 @@ static void print_state(const State &s) {
 
 void setup() {
   Serial.begin(115200);
+#ifdef XBOX_RAW_DUMP
+  raw_reports = xQueueCreate(64, sizeof(RawReport));
+#endif
   xbox.begin();
   Serial.println("xbox: scanning (hold the pair button until the Xbox button blinks fast)");
 }
@@ -107,6 +150,9 @@ void loop() {
                     xbox.buildDeviceAddressStr().c_str());
     } else {
       Serial.println("xbox: receiving");
+#ifdef XBOX_RAW_DUMP
+      subscribe_raw();
+#endif
     }
     last_link = link;
     printed = false;  // つながり直したら, 変化がなくても 1 度表示する
@@ -123,6 +169,11 @@ void loop() {
     ESP.restart();
   }
 
+#ifdef XBOX_RAW_DUMP
+  print_raw_reports();
+  delay(1);
+  return;
+#endif
   if (link == RECEIVING && millis() - printed_at >= PRINT_INTERVAL_MS) {
     State s = read_state();
     if (!printed || !same(s, last_state)) {

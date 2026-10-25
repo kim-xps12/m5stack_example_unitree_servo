@@ -130,6 +130,12 @@ LX=32768 LY=32768 RX=32768 RY=32768 LT=   0 RT=   0 | A=0 B=0 X=0 Y=0 LB=0 RB=0 
 While no controller is connected, `xbox: scanning` is printed every 3 s. After three failed
 connection attempts in a row the AtomS3R restarts and scans again.
 
+To see the reports as received, build with `PLATFORMIO_BUILD_FLAGS=-DXBOX_RAW_DUMP pio run -e xbox -t upload`:
+each BLE notification is printed in hex instead of the parsed state. In the 16-byte report, bytes 0–11
+are the sticks and triggers (16-bit little endian), byte 12 the D-pad (0 = released, 1–8 clockwise
+from up), byte 13 A `01` B `02` X `08` Y `10` LB `40` RB `80`, byte 14 View `04` Menu `08` Xbox `10`
+LS `20` RS `40`, and byte 15 Share `01` (checked on a Model 1914 on 2026-10-25).
+
 ## DYNAMIXEL TTL Board
 
 | AtomS3R | DYNAMIXEL TTL board | Note |
