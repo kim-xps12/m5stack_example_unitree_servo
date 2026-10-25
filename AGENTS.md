@@ -16,7 +16,7 @@ M5Stack 用の Unitree サーボ基板 (`kim-xps12/m5stack_board_unitree_brushle
 
 ```bash
 git submodule update --init           # 公式リポジトリの取得 (初回)
-cd atoms3r && pio run -e bench -t upload   # 計測用ファームウェア (首振りデモは -e sin_swing)
+cd atoms3r && pio run -e bench -t upload   # 計測用ファームウェア (首振りデモは -e sin_swing、Xbox コントローラの表示は -e xbox)
 python3 atoms3r/tools/bench.py check  # 配線の確認。計測の手順は atoms3r/README.md
 ```
 
